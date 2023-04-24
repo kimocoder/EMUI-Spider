@@ -11,13 +11,7 @@ def confread():
         f = conf.get("conf","f")
         stv = conf.get("conf","stv")
         env = conf.get("conf","env")
-        a = []
-        a.append(G)
-        a.append(g)
-        a.append(f)
-        a.append(stv)
-        a.append(env)
-        return a
+        return [G, g, f, stv, env]
 
 
 

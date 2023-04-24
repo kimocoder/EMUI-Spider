@@ -75,8 +75,7 @@ class MainFrame(wx.Frame):
             self.StopThreads1()
             time.sleep(0.5)
             sys.exit()
-        else:
-            sys.exit()
+        sys.exit()
 
     def updateconf(self):
         self.a=confrw.confread()
@@ -113,7 +112,13 @@ class MainFrame(wx.Frame):
         self.valuef = self.f.GetValue()
         self.valuesv = self.sv.GetValue()
         self.valueev = self.ev.GetValue()
-        if not self.valueG=='' and not self.valueg==''and not self.valuesv=='' and not self.valuef ==''and not self.valueev=='':
+        if (
+            self.valueG != ''
+            and self.valueg != ''
+            and self.valuesv != ''
+            and self.valuef != ''
+            and self.valueev != ''
+        ):
             self.sp.Enable()
             self.Writeconf()
 
@@ -137,10 +142,7 @@ class MainFrame(wx.Frame):
 
 
     def savever(self,ver):
-        if not self.version1 == '':
-            self.version1 = self.version1+ '\n' + ver
-        else:
-            self.version1 = ver
+        self.version1 = self.version1+ '\n' + ver if self.version1 != '' else ver
         
 
     def Onstart(self,event):
@@ -180,7 +182,7 @@ class MainFrame(wx.Frame):
             self.threads.remove(thread)
             self.sp.Enable()
             self.esp.Disable()
-            filename =self.time+'.txt'
+            filename = f'{self.time}.txt'
             if os.path.exists(filename):
                 self.SetStatusText(u"已停止！")
                 msgbox = wx.MessageDialog(None, u'是否打开文件查看获取到的版本和下载地址？\n以下是获取到的版本:\n'+self.version1,u'已停止',wx.YES_NO | wx.ICON_QUESTION)
@@ -188,11 +190,11 @@ class MainFrame(wx.Frame):
                 if (ret == wx.ID_YES):
                     os.system(filename)
                     self.version1 = ''
-                self.version1 = ''
             else:
                 wx.MessageBox(u'没有获取到...请使用其他的G/g/f/v..')
                 self.SetStatusText(u"已停止！")
-                self.version1 = ''
+
+            self.version1 = ''
 
     def StopThreads1(self):
         thread = self.threads[0]
@@ -210,9 +212,9 @@ class WorkerThread(threading.Thread):
         self.sv = int(sv)
         self.ev = int(ev)
         self.time = tm
-        mark = 'G'+str(self.G)+u'/g'+str(self.g)
+        mark = f'G{str(self.G)}/g{str(self.g)}'
         self.url1 = baseURL.replace(u'G1278/g104',mark)
-        mark2 = 'f'+str(self.f)
+        mark2 = f'f{str(self.f)}'
         self.url1 = self.url1.replace(u'f1',mark2)
         self.window=window
         self.threadNum = 1
@@ -234,20 +236,19 @@ class WorkerThread(threading.Thread):
         html = rep[0]
         url2 = rep[1]
         url2 = url2.replace('changelog.xml','update.zip')
-        if not html ==''and not url2 =='':
+        if html != '' and url2 != '':
             reg = re.compile(r'version=(.*?)/>')
             items = re.findall(reg,html)
             remove1 = re.compile(r'<.*?>')
             html = re.sub(remove1,'',html)
             items.append(url2)
-            name =self.time+'.txt'
-            f = open(name,'a')
-            f.write(('Version:\t')+items[0]+'\n')
-            f.write('Download link:\t'+items[1]+'\n')
-            f.write('Changelog:\t'+html+'\n\n\n')
-            f.close()
+            name = f'{self.time}.txt'
+            with open(name,'a') as f:
+                f.write(('Version:\t')+items[0]+'\n')
+                f.write('Download link:\t'+items[1]+'\n')
+                f.write('Changelog:\t'+html+'\n\n\n')
             wx.CallAfter(self.window.savever,items[0])
-            return u'发现新版本'+items[0]+'...'
+            return f'发现新版本{items[0]}...'
         else:
             return ''
              
@@ -256,13 +257,10 @@ class WorkerThread(threading.Thread):
     
     def run(self):
         self.timeToQuit.wait(1)
-        while self.sv <=self.ev:
-            if self.timeToQuit.isSet():
-                break
-            else:
-                a = self.version(self.sv)
-                if not a == '':
-                    wx.CallAfter(self.window.log,a)
+        while self.sv <= self.ev and not self.timeToQuit.isSet():
+            a = self.version(self.sv)
+            if a != '':
+                wx.CallAfter(self.window.log,a)
             self.sv = self.sv+1
             time.sleep(0.5)
         wx.CallAfter(self.window.StopThreads)

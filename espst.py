@@ -5,22 +5,19 @@ import os
 
  
 def get_text_file(filename):
-        f = open(filename, "r")
-        content = f.read()
-        f.close() 
+        with open(filename, "r") as f:
+                content = f.read()
         return content
 
 
 filename = r'conf.ini'
 if os.path.exists(filename):
-    b=get_text_file(filename)
-    if "bg" in b and "g" in b and "f" in b and "stv" in b and "env" in b:
-        esp.main()
-    #os.remove(filename)
-    else:
-        confrw.confcr()
-        esp.main()
+        b=get_text_file(filename)
+        if ("bg" not in b or "g" not in b or "f" not in b or "stv" not in b
+            or "env" not in b):
+                confrw.confcr()
 else:
-    confrw.confcr()
-    esp.main()
+        confrw.confcr()
+
+esp.main()
 
